@@ -231,4 +231,3 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 <p align="center">
   Built with ❤️ for autonomous systems research
 </p>
-# swarm-commander-
