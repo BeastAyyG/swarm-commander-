@@ -1,13 +1,14 @@
 <p align="center">
   <h1 align="center">🚁 Swarm Commander</h1>
   <p align="center">
-    <strong>Autonomous Multi-Drone Formation Control with Real-Time Obstacle Avoidance</strong>
+    <strong>Autonomous Multi-Drone Structural Inspection & Formation Control</strong>
   </p>
   <p align="center">
-    <a href="#features"><img src="https://img.shields.io/badge/Drones-5+-blue?style=for-the-badge" /></a>
+    <a href="#structural-inspection"><img src="https://img.shields.io/badge/🏗️_Structural-Inspection-blue?style=for-the-badge" /></a>
+    <a href="#features"><img src="https://img.shields.io/badge/Drones-Up_to_7-green?style=for-the-badge" /></a>
     <a href="#features"><img src="https://img.shields.io/badge/ArduPilot-SITL-orange?style=for-the-badge" /></a>
-    <a href="#features"><img src="https://img.shields.io/badge/Python-3.10+-green?style=for-the-badge" /></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
+    <a href="#features"><img src="https://img.shields.io/badge/Python-3.10+-yellow?style=for-the-badge" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge" /></a>
   </p>
 </p>
 
@@ -15,50 +16,113 @@
 
 ## 📋 Overview
 
-**Swarm Commander** is a full-stack drone swarm simulation and control system that integrates with [ArduPilot SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) for realistic flight dynamics. It features **DJI-style touchscreen waypoint control**, **Artificial Potential Field (APF) collision avoidance**, **5 dynamic formation types**, and a **real-time 2D visualization** built with Pygame.
+**Swarm Commander** is a full-stack drone swarm platform for **autonomous structural inspection** and **formation flight control**, integrated with [ArduPilot SITL](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html).
 
-This project demonstrates production-grade swarm coordination concepts applicable to search-and-rescue, agricultural surveying, and defense scenarios.
+The headline feature is **Multi-Drone Structural Inspection** — a coordinated system where drones divide a structure into sectors and simultaneously scan each sector from top to bottom, dramatically reducing inspection time. The captured data can be stitched into full 3D façade maps.
 
 ---
 
-## ✨ Features
+## 🏗️ Structural Inspection (Key Feature)
+
+### The Problem
+Inspecting large structures (buildings, bridges, towers, wind turbines) manually is **slow, expensive, and dangerous**. A single drone requires a skilled operator and covers only one side at a time.
+
+### Our Solution
+**Swarm Commander's Structural Inspection** module divides any structure into **N equal sectors** (one per drone) and executes a coordinated top-to-bottom scan in parallel:
+
+```
+                    ╭──── Drone 1 (Sector 1: 0°-90°)
+                    │
+   Structure ───────┼──── Drone 2 (Sector 2: 90°-180°)
+   (Tower/          │
+    Building)  ─────┼──── Drone 3 (Sector 3: 180°-270°)
+                    │
+                    ╰──── Drone 4 (Sector 4: 270°-360°)
+                    
+   Each drone orbits its sector at 5 altitude bands (50m → 10m)
+   with 20% overlap for image stitching
+```
+
+### How It Works
+
+1. **Sector Division**: 360° / N drones = each drone covers its arc
+2. **Altitude Banding**: Structure height divided into layers (top → bottom)
+3. **Serpentine Sweep**: Alternating orbit direction per band for efficiency
+4. **Camera Overlap**: 20% overlap between adjacent sectors for seamless stitching
+5. **Progress Tracking**: Real-time per-drone progress, photo count, and ETA
+6. **Parallel Execution**: All drones scan simultaneously → N× faster than single drone
+
+### Run the Demo
+
+```bash
+python3 src/inspection_demo.py
+```
+
+| Control | Action |
+|---------|--------|
+| **Left-Click** | Place structure to inspect |
+| **SPACE** | Start inspection mission |
+| **1-7** | Change number of drones |
+| **+/-** | Adjust orbit radius |
+| **R** | Reset mission |
+
+### Real-World Applications
+
+| Application | Description |
+|-------------|-------------|
+| 🏢 **Building Façade** | Inspect exterior walls for cracks, water damage, insulation gaps |
+| 🌉 **Bridge Monitoring** | Scan piers, cables, deck underside for structural fatigue |
+| 📡 **Cell Tower** | Inspect antenna arrays, cabling, and structural bolts |
+| ⚡ **Wind Turbine** | Blade surface scanning for erosion, lightning damage |
+| 🏗️ **Construction** | Progress monitoring with time-lapse 3D reconstruction |
+| 🆘 **Disaster Response** | Rapid building damage assessment after earthquakes/storms |
+
+---
+
+## ✨ All Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎮 **Interactive Waypoint Control** | Click-to-fly DJI-style interface with waypoint queuing and auto-heading |
-| 🛡️ **APF Collision Avoidance** | Real-time Artificial Potential Fields prevent inter-drone and obstacle collisions |
+| 🏗️ **Structural Inspection** | Multi-drone coordinated scanning with sector division and altitude bands |
+| 🎮 **Interactive Waypoint Control** | DJI-style click-to-fly with waypoint queuing and auto-heading |
+| 🛡️ **APF Collision Avoidance** | Real-time Artificial Potential Fields prevent inter-drone collisions |
 | 📐 **5 Formation Types** | V, Arrow, Circle, Wall, Line — switch instantly with hotkeys |
-| 🚁 **ArduPilot SITL Integration** | Real ArduCopter firmware with MAVLink communication via DroneKit |
-| 📡 **Live Telemetry HUD** | Real-time altitude, speed, GPS position, mode, and fleet status |
-| 🗺️ **Radar Minimap** | Overview of entire operational area with drone and obstacle positions |
-| 🎯 **Multi-Waypoint Mission** | Queue multiple waypoints for autonomous mission execution |
-| 🔴 **Dynamic Obstacles** | Right-click to place obstacles; drones organically route around them |
-| ⚡ **Random Spawn & Gather** | Drones start at random positions and autonomously gather into formation |
-| 🎨 **Pure Pygame Simulation** | Standalone simulations that work without ArduPilot for rapid prototyping |
+| 🚁 **ArduPilot SITL** | Real ArduCopter firmware with MAVLink + DroneKit |
+| 📡 **Live Telemetry** | Real-time altitude, speed, GPS, mode, health status |
+| 🗺️ **Radar Minimap** | Fleet overview with obstacle positions |
+| 🎯 **Multi-Waypoint Mission** | Queue waypoints for autonomous path following |
+| 🔴 **Dynamic Obstacles** | Right-click to place obstacles; drones route around them |
+| 🩺 **Health Monitoring** | Motor, battery, IMU, GPS, structural, and comms diagnostics |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  SWARM COMMANDER                     │
-│  ┌───────────┐  ┌──────────┐  ┌──────────────────┐  │
-│  │ Waypoint  │  │Formation │  │    APF Engine    │  │
-│  │  Queue    │──│ Planner  │──│ (Avoid+Attract)  │  │
-│  └───────────┘  └──────────┘  └──────────────────┘  │
-│         │              │               │             │
-│         ▼              ▼               ▼             │
-│  ┌─────────────────────────────────────────────┐     │
-│  │          DroneKit / MAVLink Bridge           │     │
-│  └─────────────────────────────────────────────┘     │
-│         │         │         │         │         │    │
-│         ▼         ▼         ▼         ▼         ▼    │
-│     ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐│
-│     │SITL 1│  │SITL 2│  │SITL 3│  │SITL 4│  │SITL 5││
-│     │:5760 │  │:5770 │  │:5780 │  │:5790 │  │:5800 ││
-│     └──────┘  └──────┘  └──────┘  └──────┘  └──────┘│
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      SWARM COMMANDER                         │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────┐  ┌───────────────┐  │
+│  │   Structural      │  │  Formation   │  │  APF Avoidance │  │
+│  │   Inspection      │  │  Planner     │  │  Engine        │  │
+│  │   Planner         │  │              │  │                │  │
+│  │  ┌────────────┐   │  │  V / Arrow / │  │  Attractive +  │  │
+│  │  │Sector Div. │   │  │  Circle /    │  │  Repulsive     │  │
+│  │  │Alt. Bands  │   │  │  Wall / Line │  │  Forces        │  │
+│  │  │Serpentine  │   │  │              │  │                │  │
+│  │  │Scan Paths  │   │  │              │  │                │  │
+│  │  └────────────┘   │  └──────────────┘  └───────────────┘  │
+│  └──────────────────┘                                        │
+│              │                    │                │          │
+│              ▼                    ▼                ▼          │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │            DroneKit / MAVLink Interface                  │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│         │         │         │         │         │            │
+│     ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐       │
+│     │SITL 1│  │SITL 2│  │SITL 3│  │SITL 4│  │SITL 5│       │
+│     └──────┘  └──────┘  └──────┘  └──────┘  └──────┘       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -70,27 +134,29 @@ swarm-commander/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
-├── setup.sh                     # One-click environment setup
+├── setup.sh                         # One-click setup
 ├── src/
-│   ├── interactive_commander.py # Full SITL + Pygame interactive demo
-│   ├── unified_swarm.py         # Headless SITL mission runner
-│   ├── avoidance.py             # APF collision avoidance engine
-│   ├── formations.py            # Formation blueprints & slot calculator
+│   ├── interactive_commander.py     # ⭐ DJI-style SITL + Pygame demo
+│   ├── inspection_demo.py           # ⭐ Structural inspection visual demo
+│   ├── structural_inspection.py     # Inspection planner (sectors, bands, paths)
+│   ├── unified_swarm.py             # Headless SITL mission runner
+│   ├── avoidance.py                 # APF collision avoidance engine
+│   ├── formations.py                # Formation blueprints & GPS slots
+│   ├── health_monitor.py            # Fleet health monitoring system
+│   ├── health_visualizer.py         # Health dashboard Pygame renderer
 │   └── sim/
-│       ├── basic_swarm.py       # Minimal swarm logic demo
-│       ├── visual_swarm.py      # Pygame-only swarm visualization
-│       ├── advanced_swarm.py    # Self-healing + boids + bidding
-│       └── missile_evasion.py   # Missile threat evasion simulation
+│       ├── basic_swarm.py           # Minimal swarm demo
+│       ├── visual_swarm.py          # Pygame swarm visualization
+│       ├── advanced_swarm.py        # Self-healing + boids + auction
+│       └── missile_evasion.py       # Threat evasion simulation
 ├── scripts/
-│   └── launch_sitl.sh           # Launch multiple SITL instances
+│   └── launch_sitl.sh               # Multi-drone SITL launcher
 ├── docs/
-│   ├── SETUP.md                 # Detailed setup guide
-│   ├── ARCHITECTURE.md          # Technical deep-dive
-│   └── CONTROLS.md              # User controls reference
-├── tests/
-│   └── test_sitl_connection.py  # SITL connectivity test
-└── assets/
-    └── demo.gif                 # Demo recording (placeholder)
+│   ├── SETUP.md
+│   ├── ARCHITECTURE.md
+│   └── CONTROLS.md
+└── tests/
+    └── test_sitl_connection.py
 ```
 
 ---
@@ -100,95 +166,75 @@ swarm-commander/
 ### Prerequisites
 
 - Python 3.10+
-- [ArduPilot SITL](https://ardupilot.org/dev/docs/building-setup-linux.html) built for `arducopter`
+- [ArduPilot SITL](https://ardupilot.org/dev/docs/building-setup-linux.html) (for full integration)
 - Pygame, DroneKit, pymavlink
 
-### 1. Clone & Setup
+### Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/swarm-commander.git
-cd swarm-commander
+git clone https://github.com/BeastAyyG/swarm-commander-.git
+cd swarm-commander-
 chmod +x setup.sh && ./setup.sh
 ```
 
-### 2. Run Interactive Commander (Full Demo)
+### Run Structural Inspection Demo (No ArduPilot)
+
+```bash
+python3 src/inspection_demo.py
+```
+
+### Run Full SITL Interactive Commander
 
 ```bash
 python3 -u src/interactive_commander.py
 ```
 
-This launches 5 SITL instances, connects DroneKit agents, calibrates & arms all drones, then opens the interactive Pygame window.
-
-### 3. Run Pure Simulation (No ArduPilot Required)
-
-```bash
-python3 src/sim/visual_swarm.py
-```
-
 ---
 
-## 🎮 Controls
+## 🎮 Controls Summary
 
+### Structural Inspection
 | Input | Action |
 |-------|--------|
-| **Left-Click** | Set waypoint — swarm flies there in formation |
-| **Right-Click** | Place obstacle — drones route around it |
-| **1 – 5** | Switch formation (V / Arrow / Circle / Wall / Line) |
-| **Scroll** | Zoom in/out |
-| **C** | Clear waypoint queue |
-| **X** | Clear all obstacles |
-| **F** | Toggle camera auto-follow |
-| **ESC** | Quit & cleanup |
+| **Left-Click** | Place structure |
+| **SPACE** | Start inspection |
+| **1-7** | Number of drones |
+| **+/-** | Orbit radius |
+| **R** | Reset mission |
+
+### Interactive Commander (SITL)
+| Input | Action |
+|-------|--------|
+| **Left-Click** | Set waypoint |
+| **Right-Click** | Place obstacle |
+| **1-5** | Change formation |
+| **C / X** | Clear waypoints / obstacles |
+| **F** | Toggle camera follow |
 
 ---
 
 ## 🧠 Technical Details
 
-### Artificial Potential Fields (APF)
-
-The avoidance system uses a real-time APF algorithm:
-
-- **Attractive Force**: Pulls each drone toward its formation slot
-- **Repulsive Force (Drones)**: Pushes drones apart when within `AVOID_RADIUS` (14m)
-- **Repulsive Force (Obstacles)**: Pushes drones away from obstacles within `OBSTACLE_REPULSE` (30m)
+### Structural Inspection Algorithm
 
 ```python
-F_total = F_attractive + Σ F_repulsive_drones + Σ F_repulsive_obstacles
+# For each of N drones:
+sector_angle = 360° / N
+for altitude in [50m, 40m, 30m, 20m, 10m]:    # Top to bottom
+    for point in orbit_arc(sector_start, sector_end):  # Serpentine sweep
+        fly_to(point, altitude)
+        point_camera_at(structure_center)
+        capture_photo()
 ```
 
-### Formation Slot Assignment
-
-Each formation is defined as a list of `(forward, right)` offset slots relative to the leader:
+### APF Collision Avoidance
 
 ```python
-FORMATIONS = {
-    'V':     [(0,0), (-1,-1), (-1,1), (-2,-2), (-2,2)],
-    'ARROW': [(0,0), (-1,-1), (-1,1), (-2,0), (-3,-1), (-3,1)],
-    ...
-}
+F_total = F_attractive(target) + Σ F_repulsive(drones) + Σ F_repulsive(obstacles)
 ```
 
-Slots are rotated by the swarm heading and scaled by `SPACING` (18m) to produce GPS waypoints.
-
-### SITL Integration
-
-- **Binary**: Raw `arducopter` binary execution (no `sim_vehicle.py` dependency)
-- **Calibration**: MAVLink `MAV_CMD_PREFLIGHT_CALIBRATION` sent programmatically
-- **Communication**: DroneKit TCP connections with retry logic
-- **Parameters**: Minimal params that bypass all safety checks for simulation
-
----
-
-## 🎬 Demos
-
-### Interactive Commander
-> 5 drones spawn at random positions, gather into V-formation, then follow your click waypoints while avoiding obstacles.
-
-### Missile Evasion Simulation
-> Swarm detects incoming threats and uses APF to organically scatter and regroup.
-
-### Self-Healing Formation
-> Drones with low battery return to charge; the swarm redistributes slots using an auction algorithm.
+- Drone repulsion: activates within 14m, inverse-distance scaling
+- Obstacle repulsion: activates within 30m, higher gain
 
 ---
 
@@ -196,23 +242,29 @@ Slots are rotated by the swarm heading and scaled by `SPACING` (18m) to produce 
 
 | Metric | Value |
 |--------|-------|
-| Max Drones Tested | 7 |
-| Avoidance Update Rate | 2 Hz |
-| Visualization FPS | 30 |
-| Waypoint Reach Threshold | 8m |
-| Min Inter-Drone Distance | 14m |
-| SITL Init Time | ~90s (5 drones) |
+| Max Drones | 7 |
+| Inspection Speed | N× faster (N = drone count) |
+| Altitude Bands | 5 (configurable) |
+| Sector Overlap | 20% (for stitching) |
+| Scan Points/Sector | 10 per band |
+| Total Coverage | 250 scan points (5 drones × 5 bands × 10 points) |
+| Avoidance Update | 2 Hz |
+| Visualization | 60 FPS |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] 3D visualization with OpenGL/Cesium
-- [ ] Real hardware deployment (Pixhawk)
+- [x] Multi-drone structural inspection
+- [x] 5 formation types with APF avoidance
+- [x] ArduPilot SITL integration
+- [x] DJI-style interactive waypoint control
+- [x] Health monitoring system
+- [ ] 3D point cloud generation from scan data
+- [ ] Real hardware deployment (Pixhawk + RaspberryPi)
 - [ ] ROS2 integration
-- [ ] Multi-agent reinforcement learning for path planning
+- [ ] AI-powered defect detection on captured images
 - [ ] Web-based ground control station
-- [ ] Swarm-to-swarm adversarial scenarios
 
 ---
 
@@ -224,10 +276,11 @@ Contributions are welcome! Please open an issue or PR.
 
 ## 📄 License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  Built with ❤️ for autonomous systems research
+  Built with ❤️ for autonomous systems research<br/>
+  <strong>Structural Inspection • Formation Control • Collision Avoidance</strong>
 </p>
