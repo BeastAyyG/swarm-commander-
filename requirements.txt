@@ -1,0 +1,8 @@
+# Core
+pygame>=2.5.0
+numpy>=1.24.0
+dronekit>=2.9.2
+pymavlink>=2.4.40
+
+# Optional (for advanced simulations)
+scipy>=1.10.0

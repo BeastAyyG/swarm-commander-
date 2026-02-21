@@ -1,0 +1,34 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SITL runtime directories
+sitl_v3_*/
+sitl_visual_*/
+sitl_unified_*/
+sitl_swarm_instance_*/
+
+# Logs
+*.log
+agent_*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# ArduPilot build artifacts
+eeprom.bin
+terrain/
+logs/
