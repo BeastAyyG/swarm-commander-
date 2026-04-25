@@ -253,18 +253,27 @@ F_total = F_attractive(target) + Σ F_repulsive(drones) + Σ F_repulsive(obstacl
 
 ---
 
-## 🗺️ Roadmap
+## ✅ What's Implemented
 
 - [x] Multi-drone structural inspection
 - [x] 5 formation types with APF avoidance
 - [x] ArduPilot SITL integration
 - [x] DJI-style interactive waypoint control
 - [x] Health monitoring system
+
+---
+
+## 🔭 Planned / Future Work
+
+The following features are on the roadmap but **not yet implemented**:
+
 - [ ] 3D point cloud generation from scan data
 - [ ] Real hardware deployment (Pixhawk + RaspberryPi)
 - [ ] ROS2 integration
 - [ ] AI-powered defect detection on captured images
 - [ ] Web-based ground control station
+
+Contributions and PRs for any of the above are welcome!
 
 ---
 
