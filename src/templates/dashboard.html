@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swarm Commander — Live Monitor</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+    :root {
+      --bg: #080a12;
+      --panel: #0c0e16;
+      --border: #1c2238;
+      --text: #c8d2e1;
+      --text-dim: #6478a0;
+      --accent: #00b4ff;
+      --danger: #ff3c46;
+      --warn: #ffc832;
+      --ok: #3cff82;
+      --leader-color: #00b4ff;
+      --scout-color: #ffc832;
+      --relay-color: #8c64ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+    }
+    #connection-badge {
+      margin-left: auto;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: #1a1e2c;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      transition: all .3s;
+    }
+    #connection-badge.connected {
+      background: rgba(60,255,130,.1);
+      color: var(--ok);
+      border-color: var(--ok);
+    }
+    #formation-badge {
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(0,180,255,.08);
+      color: var(--accent);
+      border: 1px solid rgba(0,180,255,.3);
+    }
+    main {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .drone-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color .3s;
+    }
+    .drone-card.warn { border-color: var(--warn); }
+    .drone-card.danger { border-color: var(--danger); }
+    .drone-card.ok { border-color: transparent; }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .drone-id {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .role-badge {
+      padding: 2px 9px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .role-leader { background: rgba(0,180,255,.15); color: var(--leader-color); }
+    .role-scout  { background: rgba(255,200,50,.12); color: var(--scout-color); }
+    .role-relay  { background: rgba(140,100,255,.15); color: var(--relay-color); }
+    .role-none   { background: rgba(255,255,255,.05); color: var(--text-dim); }
+    .field {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.82rem;
+    }
+    .field .label { color: var(--text-dim); }
+    .field .value { font-variant-numeric: tabular-nums; }
+    .battery-bar {
+      margin-top: 8px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .battery-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .5s, background .5s;
+    }
+    .formation-ok  { color: var(--ok); }
+    .formation-bad { color: var(--warn); }
+    #events-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    #events-panel h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #event-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #event-list li {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      padding: 4px 8px;
+      border-left: 2px solid var(--border);
+    }
+    #event-list li .ts { color: var(--accent); margin-right: 6px; }
+    #event-list li.role_change  { border-color: var(--leader-color); }
+    #event-list li.formation_switch { border-color: var(--relay-color); }
+    #event-list li.path_replan  { border-color: var(--warn); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚁 Swarm Commander — Live Monitor</h1>
+    <span id="formation-badge">Formation: —</span>
+    <span id="connection-badge">● Disconnected</span>
+  </header>
+
+  <main>
+    <div id="grid"></div>
+    <div id="events-panel">
+      <h2>Mission Events</h2>
+      <ul id="event-list"><li><span class="ts">—</span>No events yet</li></ul>
+    </div>
+  </main>
+
+  <script>
+    const socket = io();
+    const grid = document.getElementById('grid');
+    const eventList = document.getElementById('event-list');
+    const connBadge = document.getElementById('connection-badge');
+    const formBadge = document.getElementById('formation-badge');
+
+    // ---- Connection state ----
+    socket.on('connect', () => {
+      connBadge.textContent = '● Connected';
+      connBadge.classList.add('connected');
+      socket.emit('request_snapshot');
+    });
+    socket.on('disconnect', () => {
+      connBadge.textContent = '● Disconnected';
+      connBadge.classList.remove('connected');
+    });
+
+    // ---- Snapshot on connect ----
+    socket.on('snapshot', (data) => {
+      renderDrones(data.drones);
+      if (data.formation) formBadge.textContent = 'Formation: ' + data.formation;
+      if (data.events) renderEvents(data.events);
+    });
+
+    // ---- 500 ms telemetry push ----
+    socket.on('telemetry_update', (data) => {
+      renderDrones(data.drones);
+      if (data.formation) formBadge.textContent = 'Formation: ' + data.formation;
+    });
+
+    // ---- Drone cards ----
+    function renderDrones(drones) {
+      drones.forEach(d => {
+        let card = document.getElementById('card-' + d.id);
+        if (!card) {
+          card = document.createElement('div');
+          card.className = 'drone-card';
+          card.id = 'card-' + d.id;
+          grid.appendChild(card);
+        }
+
+        const bat = d.battery;
+        const batColor = bat < 20 ? 'var(--danger)' : bat < 40 ? 'var(--warn)' : 'var(--ok)';
+        const stateClass = bat < 20 ? 'danger' : bat < 40 ? 'warn' : 'ok';
+        const role = d.role || 'none';
+        const fmtOk = d.formation_ok;
+
+        card.className = 'drone-card ' + stateClass;
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="drone-id">Drone ${d.id}</span>
+            <span class="role-badge role-${role}">${role}</span>
+          </div>
+          <div class="field"><span class="label">Lat</span><span class="value">${d.lat.toFixed(6)}</span></div>
+          <div class="field"><span class="label">Lon</span><span class="value">${d.lon.toFixed(6)}</span></div>
+          <div class="field"><span class="label">Alt</span><span class="value">${d.alt.toFixed(1)} m</span></div>
+          <div class="field"><span class="label">Battery</span><span class="value">${bat.toFixed(1)} %</span></div>
+          <div class="field">
+            <span class="label">Formation</span>
+            <span class="value ${fmtOk ? 'formation-ok' : 'formation-bad'}">${d.formation || '—'} ${fmtOk ? '✓' : '⚠'}</span>
+          </div>
+          <div class="battery-bar">
+            <div class="battery-fill" style="width:${bat}%;background:${batColor};"></div>
+          </div>
+        `;
+      });
+    }
+
+    // ---- Event feed ----
+    function renderEvents(events) {
+      // events newest-first from server
+      eventList.innerHTML = '';
+      [...events].reverse().forEach(ev => {
+        const li = document.createElement('li');
+        li.className = ev.event_type || '';
+        const ts = new Date(ev.timestamp * 1000).toLocaleTimeString();
+        let msg = '';
+        const d = ev.data || {};
+        switch (ev.event_type) {
+          case 'role_change':
+            msg = `Drone ${ev.drone_id}: ${d.old_role} → ${d.new_role} (${d.reason || ''})`;
+            break;
+          case 'formation_switch':
+            msg = `Formation: ${d.from_formation} → ${d.to_formation}`;
+            break;
+          case 'path_replan':
+            msg = `Drone ${ev.drone_id} replanned path (${d.trigger || ''})`;
+            break;
+          default:
+            msg = JSON.stringify(ev.data);
+        }
+        li.innerHTML = `<span class="ts">${ts}</span>${msg}`;
+        eventList.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>

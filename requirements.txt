@@ -6,3 +6,12 @@ pymavlink>=2.4.40
 
 # Optional (for advanced simulations)
 scipy>=1.10.0
+
+# Web monitor (Flask + SocketIO)
+flask>=3.0.0
+flask-socketio>=5.3.0
+python-socketio>=5.10.0
+eventlet>=0.35.0
+
+# Testing
+pytest>=7.4.0

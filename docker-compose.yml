@@ -1,0 +1,121 @@
+# docker-compose.yml — SITL ArduCopter Swarm (5 simulated drones)
+# ================================================================
+# Spins up 5 ArduPilot SITL instances using the ardupilot/sitl-ubuntu
+# container image, one per service.  Each drone listens on TCP port
+# 5760 + (drone_index * 10) for DroneKit connections.
+#
+# Usage
+# -----
+#   docker compose up          # start all 5 SITL instances
+#   docker compose up drone1   # start only drone 1
+#   docker compose down        # stop and remove containers
+#
+# Ports exposed on the host machine
+# ------------------------------------
+#   drone1 → tcp:127.0.0.1:5760
+#   drone2 → tcp:127.0.0.1:5770
+#   drone3 → tcp:127.0.0.1:5780
+#   drone4 → tcp:127.0.0.1:5790
+#   drone5 → tcp:127.0.0.1:5800
+#
+# After all containers are running, connect with:
+#   python3 src/sitl_integration/drone_agent.py --id 1 --connect tcp:127.0.0.1:5760
+
+version: "3.9"
+
+x-sitl-base: &sitl-base
+  image: ardupilot/ardupilot-sitl:latest
+  restart: unless-stopped
+  environment:
+    # ArduCopter default home: Canberra RAAF
+    - ARDUPILOT_HOME=-35.363261,149.165230,584,353
+  # Resource limits — SITL is CPU-light per instance
+  deploy:
+    resources:
+      limits:
+        cpus: "0.50"
+        memory: 256M
+
+services:
+
+  drone1:
+    <<: *sitl-base
+    container_name: sitl_drone1
+    command: >
+      arducopter
+      -I0
+      --model quad
+      --home -35.363261,149.165230,584,353
+      --defaults /ardupilot/Tools/autotest/default_params/copter.parm
+    ports:
+      - "5760:5760/tcp"   # MAVLink / DroneKit
+      - "5501:5501/udp"   # MAVLink secondary (optional)
+    volumes:
+      - sitl_drone1_data:/var/lib/ardupilot
+
+  drone2:
+    <<: *sitl-base
+    container_name: sitl_drone2
+    command: >
+      arducopter
+      -I1
+      --model quad
+      --home -35.363261,149.165230,584,353
+      --defaults /ardupilot/Tools/autotest/default_params/copter.parm
+    ports:
+      - "5770:5770/tcp"
+      - "5511:5511/udp"
+    volumes:
+      - sitl_drone2_data:/var/lib/ardupilot
+
+  drone3:
+    <<: *sitl-base
+    container_name: sitl_drone3
+    command: >
+      arducopter
+      -I2
+      --model quad
+      --home -35.363261,149.165230,584,353
+      --defaults /ardupilot/Tools/autotest/default_params/copter.parm
+    ports:
+      - "5780:5780/tcp"
+      - "5521:5521/udp"
+    volumes:
+      - sitl_drone3_data:/var/lib/ardupilot
+
+  drone4:
+    <<: *sitl-base
+    container_name: sitl_drone4
+    command: >
+      arducopter
+      -I3
+      --model quad
+      --home -35.363261,149.165230,584,353
+      --defaults /ardupilot/Tools/autotest/default_params/copter.parm
+    ports:
+      - "5790:5790/tcp"
+      - "5531:5531/udp"
+    volumes:
+      - sitl_drone4_data:/var/lib/ardupilot
+
+  drone5:
+    <<: *sitl-base
+    container_name: sitl_drone5
+    command: >
+      arducopter
+      -I4
+      --model quad
+      --home -35.363261,149.165230,584,353
+      --defaults /ardupilot/Tools/autotest/default_params/copter.parm
+    ports:
+      - "5800:5800/tcp"
+      - "5541:5541/udp"
+    volumes:
+      - sitl_drone5_data:/var/lib/ardupilot
+
+volumes:
+  sitl_drone1_data:
+  sitl_drone2_data:
+  sitl_drone3_data:
+  sitl_drone4_data:
+  sitl_drone5_data:
