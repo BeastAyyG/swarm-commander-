@@ -45,6 +45,12 @@ FORMATIONS = {
         'description': 'Trail formation — single-file column',
         'slots': [(0,0), (-1,0), (-2,0), (-3,0), (-4,0), (-5,0), (-6,0)],
     },
+    'GRID': {
+        'name': 'Grid',
+        'icon': '⊞',
+        'description': '3×3 grid — maximum area coverage and sensor distribution',
+        'slots': [(0,0), (0,-1), (0,1), (-1,-1), (-1,0), (-1,1), (1,-1), (1,0), (1,1)],
+    },
 }
 
 FORMATION_KEYS = list(FORMATIONS.keys())

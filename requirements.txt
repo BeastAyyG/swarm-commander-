@@ -1,6 +1,13 @@
-# Core
-pygame>=2.5.0
+# Core (CLI commander requires no extra packages — uses Python stdlib only)
 numpy>=1.24.0
+
+# Testing
+pytest>=7.4.0
+
+# Visual simulations (optional — required for visual_swarm.py and inspection_demo.py)
+pygame>=2.5.0
+
+# ArduPilot SITL integration (optional — required for unified_swarm.py and interactive_commander.py)
 dronekit>=2.9.2
 pymavlink>=2.4.40
 

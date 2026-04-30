@@ -84,15 +84,17 @@ python3 src/inspection_demo.py
 | Feature | Description |
 |---------|-------------|
 | 🏗️ **Structural Inspection** | Multi-drone coordinated scanning with sector division and altitude bands |
+| 🖥️ **CLI Commander** | Fully interactive terminal CLI — takeoff, land, goto, formation change (no SITL needed) |
 | 🎮 **Interactive Waypoint Control** | DJI-style click-to-fly with waypoint queuing and auto-heading |
 | 🛡️ **APF Collision Avoidance** | Real-time Artificial Potential Fields prevent inter-drone collisions |
-| 📐 **5 Formation Types** | V, Arrow, Circle, Wall, Line — switch instantly with hotkeys |
+| 📐 **6 Formation Types** | V, Arrow, Circle, Wall, Line, Grid — switch instantly with hotkeys or CLI |
 | 🚁 **ArduPilot SITL** | Real ArduCopter firmware with MAVLink + DroneKit |
 | 📡 **Live Telemetry** | Real-time altitude, speed, GPS, mode, health status |
 | 🗺️ **Radar Minimap** | Fleet overview with obstacle positions |
 | 🎯 **Multi-Waypoint Mission** | Queue waypoints for autonomous path following |
 | 🔴 **Dynamic Obstacles** | Right-click to place obstacles; drones route around them |
 | 🩺 **Health Monitoring** | Motor, battery, IMU, GPS, structural, and comms diagnostics |
+| 🧪 **Unit Tests** | 53 tests for formations, APF engine, drone model, and fleet logic |
 
 ---
 
@@ -136,12 +138,13 @@ swarm-commander/
 ├── requirements.txt
 ├── setup.sh                         # One-click setup
 ├── src/
-│   ├── interactive_commander.py     # ⭐ DJI-style SITL + Pygame demo
-│   ├── inspection_demo.py           # ⭐ Structural inspection visual demo
+│   ├── cli_commander.py             # ⭐ Text CLI — takeoff/land/goto/formation (no SITL needed)
+│   ├── interactive_commander.py     # DJI-style SITL + Pygame demo
+│   ├── inspection_demo.py           # Structural inspection visual demo
 │   ├── structural_inspection.py     # Inspection planner (sectors, bands, paths)
 │   ├── unified_swarm.py             # Headless SITL mission runner
 │   ├── avoidance.py                 # APF collision avoidance engine
-│   ├── formations.py                # Formation blueprints & GPS slots
+│   ├── formations.py                # Formation blueprints & GPS slots (V/ARROW/CIRCLE/WALL/LINE/GRID)
 │   ├── health_monitor.py            # Fleet health monitoring system
 │   ├── health_visualizer.py         # Health dashboard Pygame renderer
 │   └── sim/
@@ -156,7 +159,8 @@ swarm-commander/
 │   ├── ARCHITECTURE.md
 │   └── CONTROLS.md
 └── tests/
-    └── test_sitl_connection.py
+    ├── test_swarm_core.py           # Unit tests (formations, APF, fleet, inspection)
+    └── test_sitl_connection.py      # SITL connectivity test
 ```
 
 ---
@@ -166,27 +170,83 @@ swarm-commander/
 ### Prerequisites
 
 - Python 3.10+
-- [ArduPilot SITL](https://ardupilot.org/dev/docs/building-setup-linux.html) (for full integration)
-- Pygame, DroneKit, pymavlink
+- [ArduPilot SITL](https://ardupilot.org/dev/docs/building-setup-linux.html) (for full SITL integration — optional)
+- Pygame, DroneKit, pymavlink (optional for visual/SITL modes)
 
 ### Setup
 
 ```bash
 git clone https://github.com/BeastAyyG/swarm-commander-.git
 cd swarm-commander-
+pip install -r requirements.txt
+# or use the one-click script:
 chmod +x setup.sh && ./setup.sh
 ```
 
-### Run Structural Inspection Demo (No ArduPilot)
+### 🖥️ CLI Commander (No ArduPilot, No Display Required)
+
+The **CLI Commander** is the easiest way to get started.  It runs a fully
+simulated swarm entirely in the terminal — no ArduPilot, SITL, or GUI needed.
+
+```bash
+python3 src/cli_commander.py                          # 3-drone V-formation (default)
+python3 src/cli_commander.py --drones 5               # 5 drones
+python3 src/cli_commander.py --drones 7 --formation GRID --spacing 20
+python3 src/cli_commander.py --batch commands.txt     # batch / scripted mode
+```
+
+**Interactive session example:**
+
+```
+swarm> status                    # print fleet status table
+swarm> takeoff 25                # arm all drones, climb to 25 m
+swarm> goto 200 100              # navigate to (200, 100) in local frame
+swarm> formation CIRCLE          # switch to circle formation mid-flight
+swarm> simulate 30 1             # advance simulation 30 × 1 s steps
+swarm> status                    # check new positions
+swarm> land                      # land all drones
+swarm> exit
+```
+
+**All CLI commands:**
+
+| Command | Description |
+|---------|-------------|
+| `takeoff [alt]` | Arm all drones and climb to altitude (default 20 m) |
+| `land` | Land all airborne drones |
+| `goto <x> <y> [alt]` | Navigate swarm to local-frame waypoint (metres) |
+| `formation <name>` | Change formation: `V`, `ARROW`, `CIRCLE`, `WALL`, `LINE`, `GRID` |
+| `formations` | List all formations with descriptions |
+| `add [n]` | Add n drones to the fleet (default 1) |
+| `remove <id>` | Remove a drone by ID |
+| `simulate [steps] [dt]` | Advance physics simulation (default 10 steps × 1 s) |
+| `status` | Print fleet status table |
+| `reset` | Return all drones to home |
+| `help` | Show help for all commands |
+| `exit` / `quit` | Quit the CLI |
+
+### 🎮 Visual Simulation Demo (Pygame, No ArduPilot)
+
+```bash
+python3 src/sim/visual_swarm.py     # mouse-driven swarm visualization
+```
+
+### 🏗️ Structural Inspection Demo (Pygame, No ArduPilot)
 
 ```bash
 python3 src/inspection_demo.py
 ```
 
-### Run Full SITL Interactive Commander
+### Full SITL Interactive Commander (ArduPilot required)
 
 ```bash
 python3 -u src/interactive_commander.py
+```
+
+### 🧪 Run Tests
+
+```bash
+pytest tests/test_swarm_core.py -v    # 53 unit tests, no SITL required
 ```
 
 ---
@@ -256,10 +316,12 @@ F_total = F_attractive(target) + Σ F_repulsive(drones) + Σ F_repulsive(obstacl
 ## ✅ What's Implemented
 
 - [x] Multi-drone structural inspection
-- [x] 5 formation types with APF avoidance
+- [x] 6 formation types (V, Arrow, Circle, Wall, Line, **Grid**) with APF avoidance
 - [x] ArduPilot SITL integration
 - [x] DJI-style interactive waypoint control
 - [x] Health monitoring system
+- [x] **Text-based CLI commander** (no SITL/display required)
+- [x] **Unit test suite** (53 tests — formations, APF, drone model, fleet)
 
 ---
 
