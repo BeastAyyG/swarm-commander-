@@ -313,7 +313,7 @@ F_total = F_attractive(target) + Σ F_repulsive(drones) + Σ F_repulsive(obstacl
 
 ---
 
-## 🗺️ Roadmap
+## ✅ What's Implemented
 
 - [x] Multi-drone structural inspection
 - [x] 6 formation types (V, Arrow, Circle, Wall, Line, **Grid**) with APF avoidance
@@ -322,11 +322,20 @@ F_total = F_attractive(target) + Σ F_repulsive(drones) + Σ F_repulsive(obstacl
 - [x] Health monitoring system
 - [x] **Text-based CLI commander** (no SITL/display required)
 - [x] **Unit test suite** (53 tests — formations, APF, drone model, fleet)
+
+---
+
+## 🔭 Planned / Future Work
+
+The following features are on the roadmap but **not yet implemented**:
+
 - [ ] 3D point cloud generation from scan data
 - [ ] Real hardware deployment (Pixhawk + RaspberryPi)
 - [ ] ROS2 integration
 - [ ] AI-powered defect detection on captured images
 - [ ] Web-based ground control station
+
+Contributions and PRs for any of the above are welcome!
 
 ---
 
