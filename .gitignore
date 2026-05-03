@@ -1,17 +1,32 @@
-# Byte-compiled
+```
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# SITL runtime directories
-sitl_v3_*/
-sitl_visual_*/
-sitl_unified_*/
-sitl_swarm_instance_*/
-
-# Logs
-*.log
-agent_*.log
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
 
 # IDE
 .vscode/
@@ -19,16 +34,29 @@ agent_*.log
 *.swp
 *.swo
 
+# Logs
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Environment
+.env
+.env.local
+*.env.*
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Virtual envs
-venv/
-.venv/
-env/
-
-# ArduPilot build artifacts
-eeprom.bin
-terrain/
-logs/
+# Testing
+.pytest_cache/
+.mypy_cache/
+```
